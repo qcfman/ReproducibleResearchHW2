@@ -1,0 +1,57 @@
+<html>
+
+<head>
+<title>Human Cost and Economic Impact of Weather Events</title>
+</head>
+
+<body>
+<h1>Human Cost and Economic Impact of Weather Events</h1>
+
+<p>This document presents presents the cost in human lives as wellas the economic impact of various weather events.  We use data provided by NOAH.  We found that, in aggregate, Tornadoes are responsible for about 33% of total deaths by followed by fatalities by heat exhaustion (excessive heat).  With respect to economic impact, flood is the largest contributor, followed by hurricanes.  Again, floods account for about one-third of the economic cost and hurricanes for slightly more than one-sixth, for a total of more than half of all economic damage.</p>
+
+<h2>Data Processing</h2>
+
+I loaded the repdata-data-StormData.csv file provided by National Weather Service.  The amount of economic damage for each event is encoded by providing a quantity in PROPDMG and K, M or B in PROPDMGEXP to indicate that the quantity should be interpreted in thousand, million or billion of dollars.  I calculated the actual impact in dollars from these two columns.
+
+<!--begin.rcode
+setwd("C:/Users/Juan Carlos/Desktop/Reproducible Data/HW2")
+require(plyr)   # Will use this package
+df <- read.csv("repdata-data-StormData.csv")
+df$EconImpact <- df$PROPDMG*ifelse(df$PROPDMGEXP=="B",
+                                   1000000000,
+                                   ifelse(df$PROPDMGEXP=="M",
+                                          1000000,
+                                          ifelse(df$PROPDMGEXP=="B",1000,1)))
+end.rcode-->
+
+The human cost could be measured in fatalities or injuries, with fatalities taking precedence over injuries.  The economic cost is measured by the amount of dollars that the event cost (presumably the dollar amount needed to reconstruct what was lost by the event).  Therefore I summarize the data by fatalities and injuries (in rslt1), and by economic impact (in rslt2)
+
+<!--begin.rcode
+rslt1 <- ddply(df,~EVTYPE,summarise,fat=sum(FATALITIES),inj=sum(INJURIES))
+rslt1 <- rslt1[with(rslt1, order(-fat, -inj)), ]
+head(rslt1)
+rslt2 <- ddply(df,~EVTYPE,summarise,ei=sum(EconImpact))
+rslt2 <- rslt2[with(rslt2, order(-ei)), ]
+head(rslt2)
+end.rcode-->
+
+<h2>Results</h2>
+
+<p>  Given that the number of fatalities that corresponds to tornadoes is sufficiently larger than for the rest of the events, I consider it adequate to only include fatalities in the analysis.  The following pie graph shows the proportion of human life lost to each of the events.  Please note that Tornadoes takes about one-third and deaths by heat another one-third, making them the deadliest type of events. </p>
+
+<!--begin.rcode fig.width=7, fig.height=6
+pie(rslt1$fat,head(rslt1$EVTYPE),main = "Aggregate Fatalities by Event")
+end.rcode-->
+
+<p>Following is a similar graph that shows the economic impact by event.  In the graph you can appreciate that floods is the costliest event, followed by hurricanes.  Again, the proportion is about one-third and one-sixth.</p>
+
+<!--begin.rcode fig.width=7, fig.height=6
+pie(rslt2$ei,head(rslt2$EVTYPE),main = "Aggregate Economic Impact by Event")
+end.rcode-->
+
+<h2>Conclusion</h2>
+
+<p>  We have shown in this page that Tornadoes is the deadliest type of weather event and that flood is the costliest type of whether event.  The former accounts for about one-third of lives lost in the US while the latter accounts for about one-third of dollars lost to weather events.</p>
+
+</body>
+</html>

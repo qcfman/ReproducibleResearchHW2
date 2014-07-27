@@ -1,0 +1,141 @@
+<html>
+
+<head>
+<style type="text/css">
+.knitr.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+},
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0em 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.rimage.left {
+  text-align: left;
+}
+.rimage.right {
+  text-align: right;
+}
+.rimage.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>Human Cost and Economic Impact of Weather Events</title>
+</head>
+
+<body>
+<h1>Human Cost and Economic Impact of Weather Events</h1>
+
+<p>This document presents presents the cost in human lives as wellas the economic impact of various weather events.  We use data provided by NOAH.  We found that, in aggregate, Tornadoes are responsible for about 33% of total deaths by followed by fatalities by heat exhaustion (excessive heat).  With respect to economic impact, flood is the largest contributor, followed by hurricanes.  Again, floods account for about one-third of the economic cost and hurricanes for slightly more than one-sixth, for a total of more than half of all economic damage.</p>
+
+<h2>Data Processing</h2>
+
+I loaded the repdata-data-StormData.csv file provided by National Weather Service.  The amount of economic damage for each event is encoded by providing a quantity in PROPDMG and K, M or B in PROPDMGEXP to indicate that the quantity should be interpreted in thousand, million or billion of dollars.  I calculated the actual impact in dollars from these two columns.
+
+<div class="chunk" id="unnamed-chunk-1"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">setwd</span><span class="hl std">(</span><span class="hl str">&quot;C:/Users/Juan Carlos/Desktop/Reproducible Data/HW2&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">require</span><span class="hl std">(plyr)</span>   <span class="hl com"># Will use this package</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## Loading required package: plyr
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: package 'plyr' was built under R version 3.0.3
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">df</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read.csv</span><span class="hl std">(</span><span class="hl str">&quot;repdata-data-StormData.csv&quot;</span><span class="hl std">)</span>
+<span class="hl std">df</span><span class="hl opt">$</span><span class="hl std">EconImpact</span> <span class="hl kwb">&lt;-</span> <span class="hl std">df</span><span class="hl opt">$</span><span class="hl std">PROPDMG</span><span class="hl opt">*</span><span class="hl kwd">ifelse</span><span class="hl std">(df</span><span class="hl opt">$</span><span class="hl std">PROPDMGEXP</span><span class="hl opt">==</span><span class="hl str">&quot;B&quot;</span><span class="hl std">,</span>
+                                   <span class="hl num">1000000000</span><span class="hl std">,</span>
+                                   <span class="hl kwd">ifelse</span><span class="hl std">(df</span><span class="hl opt">$</span><span class="hl std">PROPDMGEXP</span><span class="hl opt">==</span><span class="hl str">&quot;M&quot;</span><span class="hl std">,</span>
+                                          <span class="hl num">1000000</span><span class="hl std">,</span>
+                                          <span class="hl kwd">ifelse</span><span class="hl std">(df</span><span class="hl opt">$</span><span class="hl std">PROPDMGEXP</span><span class="hl opt">==</span><span class="hl str">&quot;B&quot;</span><span class="hl std">,</span><span class="hl num">1000</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">)))</span>
+</pre></div>
+</div></div>
+
+The human cost could be measured in fatalities or injuries, with fatalities taking precedence over injuries.  The economic cost is measured by the amount of dollars that the event cost (presumably the dollar amount needed to reconstruct what was lost by the event).  Therefore I summarize the data by fatalities and injuries (in rslt1), and by economic impact (in rslt2)
+
+<div class="chunk" id="unnamed-chunk-2"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">rslt1</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">ddply</span><span class="hl std">(df,</span><span class="hl opt">~</span><span class="hl std">EVTYPE,summarise,</span><span class="hl kwc">fat</span><span class="hl std">=</span><span class="hl kwd">sum</span><span class="hl std">(FATALITIES),</span><span class="hl kwc">inj</span><span class="hl std">=</span><span class="hl kwd">sum</span><span class="hl std">(INJURIES))</span>
+<span class="hl std">rslt1</span> <span class="hl kwb">&lt;-</span> <span class="hl std">rslt1[</span><span class="hl kwd">with</span><span class="hl std">(rslt1,</span> <span class="hl kwd">order</span><span class="hl std">(</span><span class="hl opt">-</span><span class="hl std">fat,</span> <span class="hl opt">-</span><span class="hl std">inj)), ]</span>
+<span class="hl kwd">head</span><span class="hl std">(rslt1)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##             EVTYPE  fat   inj
+## 834        TORNADO 5633 91346
+## 130 EXCESSIVE HEAT 1903  6525
+## 153    FLASH FLOOD  978  1777
+## 275           HEAT  937  2100
+## 464      LIGHTNING  816  5230
+## 856      TSTM WIND  504  6957
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">rslt2</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">ddply</span><span class="hl std">(df,</span><span class="hl opt">~</span><span class="hl std">EVTYPE,summarise,</span><span class="hl kwc">ei</span><span class="hl std">=</span><span class="hl kwd">sum</span><span class="hl std">(EconImpact))</span>
+<span class="hl std">rslt2</span> <span class="hl kwb">&lt;-</span> <span class="hl std">rslt2[</span><span class="hl kwd">with</span><span class="hl std">(rslt2,</span> <span class="hl kwd">order</span><span class="hl std">(</span><span class="hl opt">-</span><span class="hl std">ei)), ]</span>
+<span class="hl kwd">head</span><span class="hl std">(rslt2)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##                EVTYPE        ei
+## 170             FLOOD 1.438e+11
+## 411 HURRICANE/TYPHOON 6.930e+10
+## 834           TORNADO 5.377e+10
+## 670       STORM SURGE 4.330e+10
+## 244              HAIL 1.505e+10
+## 153       FLASH FLOOD 1.474e+10
+</pre></div>
+</div></div>
+
+<h2>Results</h2>
+
+<p>  Given that the number of fatalities that corresponds to tornadoes is sufficiently larger than for the rest of the events, I consider it adequate to only include fatalities in the analysis.  The following pie graph shows the proportion of human life lost to each of the events.  Please note that Tornadoes takes about one-third and deaths by heat another one-third, making them the deadliest type of events. </p>
+
+<div class="chunk" id="unnamed-chunk-3"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">pie</span><span class="hl std">(rslt1</span><span class="hl opt">$</span><span class="hl std">fat,</span><span class="hl kwd">head</span><span class="hl std">(rslt1</span><span class="hl opt">$</span><span class="hl std">EVTYPE),</span><span class="hl kwc">main</span> <span class="hl std">=</span> <span class="hl str">&quot;Aggregate Fatalities by Event&quot;</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-3.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" class="plot" /></div></div>
+
+<p>Following is a similar graph that shows the economic impact by event.  In the graph you can appreciate that floods is the costliest event, followed by hurricanes.  Again, the proportion is about one-third and one-sixth.</p>
+
+<div class="chunk" id="unnamed-chunk-4"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">pie</span><span class="hl std">(rslt2</span><span class="hl opt">$</span><span class="hl std">ei,</span><span class="hl kwd">head</span><span class="hl std">(rslt2</span><span class="hl opt">$</span><span class="hl std">EVTYPE),</span><span class="hl kwc">main</span> <span class="hl std">=</span> <span class="hl str">&quot;Aggregate Economic Impact by Event&quot;</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/unnamed-chunk-4.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" class="plot" /></div></div>
+
+<h2>Conclusion</h2>
+
+<p>  We have shown in this page that Tornadoes is the deadliest type of weather event and that flood is the costliest type of whether event.  The former accounts for about one-third of lives lost in the US while the latter accounts for about one-third of dollars lost to weather events.</p>
+
+</body>
+</html>
